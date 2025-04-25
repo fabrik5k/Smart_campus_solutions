@@ -1,87 +1,81 @@
+# Sensor Service
 
-# Projeto gRPC + Kafka para Sensores
+Este projeto implementa um serviço gRPC em Python que gera dados sintéticos periodicamente e os publica em um tópico Kafka.
 
-Este projeto implementa um serviço gRPC para recebimento de dados de sensores e publica esses dados em um tópico Kafka.
-
-## Estrutura de Diretórios
+## Estrutura de diretórios
 
 ```
 .
-├── docker-compose.yml        # Orquestração dos containers (Kafka, Zookeeper, etc.)
-├── kafka_producer.py         # Cliente Kafka usado pelo servidor gRPC
 ├── proto/
-│   └── sensor.proto          # Definição do serviço gRPC e mensagens
-├── requirements.txt          # Dependências do projeto
-├── sensor_pb2.py             # Código gerado pelo compilador protobuf
-├── sensor_pb2_grpc.py        # Código gRPC gerado
-└── server.py                 # Servidor gRPC
+│   └── sensor.proto
+├── sensor_pb2.py
+├── sensor_pb2_grpc.py
+├── server.py
+├── requirements.txt
+├── Dockerfile.producer
+└── docker-compose.yml
 ```
 
-## Descrição do Funcionamento
+## Pré-requisitos
 
-1. **gRPC Server** (`server.py`):
-   - Expõe o método `SendSensorData`.
-   - Recebe dados dos sensores via gRPC.
-   - Encaminha os dados ao Kafka utilizando o `kafka_producer.py`.
+- Python 3.7+
+- Kafka (rodando localmente ou em container, configurado em `docker-compose.yml`)
+- `protoc` (Protocol Buffers Compiler)
+- Docker & Docker Compose (opcional)
 
-2. **Kafka Producer** (`kafka_producer.py`):
-   - Conecta-se ao broker Kafka definido em `172.17.0.1:9092`.
-   - Publica os dados no tópico `sensor-data`.
+## Instalação
 
-3. **Protobuf**:
-   - Arquivo `proto/sensor.proto` define as mensagens `SensorRequest` e `SensorResponse` e o serviço `SensorService`.
+1. Clone o repositório:
+   ```bash
+   git clone <url-do-repo>
+   cd sensor-service
+   ```
+2. Crie um ambiente virtual e instale dependências:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+3. Gere os stubs gRPC:
+   ```bash
+   mkdir -p generated
+   python -m grpc_tools.protoc -I./proto --python_out=./generated \
+       --grpc_python_out=./generated proto/sensor.proto
+   ```
+4. Inicie o Kafka (via Docker Compose):
+   ```bash
+   docker-compose up -d
+   ```
 
-## Como Executar
+## Uso
 
-### 1. Clonar o repositório
+1. Execute o servidor gRPC producer:
+   ```bash
+   python server.py
+   ```
+   O servidor ficará escutando na porta `50051` e publicando no tópico Kafka `synthetic-data` a cada segundo.
+
+2. (Opcional) Teste o stream via um cliente gRPC Python:
+   ```python
+   from google.protobuf.empty_pb2 import Empty
+   from sensor_pb2_grpc import DataProducerStub
+   import grpc
+
+   channel = grpc.insecure_channel('localhost:50051')
+   stub = DataProducerStub(channel)
+   for msg in stub.StreamData(Empty()):
+       print(msg)
+   ```
+
+## Docker
+
+Para empacotar o producer em um container Docker, use:
 
 ```bash
-git clone <seu-repositorio>
-cd <pasta-do-projeto>
+docker build -t sensor-producer -f Dockerfile.producer .
+docker run --network host sensor-producer
 ```
 
-### 2. Subir os containers com Kafka
+## Licença
 
-```bash
-docker-compose up -d
-```
-
-### 3. Gerar arquivos a partir do .proto (se necessário)
-
-```bash
-python -m grpc_tools.protoc -I./proto --python_out=. --grpc_python_out=. ./proto/sensor.proto
-```
-
-### 4. Instalar dependências
-
-```bash
-pip install -r requirements.txt
-```
-
-### 5. Rodar o servidor gRPC
-
-```bash
-python server.py
-```
-
-## Exemplo de Requisição gRPC
-
-Você pode usar um cliente gRPC Python ou ferramentas como Postman (com gRPC beta) para enviar uma requisição com o seguinte payload:
-
-```json
-{
-  "sensor_id": "sensor-001",
-  "type": "temperatura",
-  "value": 26.5,
-  "timestamp": "2025-04-24T00:00:00Z"
-}
-```
-
-## Observações
-
-- Certifique-se que o endereço IP e a porta do Kafka (`172.17.0.1:9092`) estão acessíveis no seu ambiente.
-- Você pode alterar o endereço no arquivo `kafka_producer.py` se necessário.
-
----
-
-Desenvolvido como parte de um projeto de integração entre gRPC e sistemas distribuídos com Kafka.
+MIT
