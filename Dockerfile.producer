@@ -1,0 +1,10 @@
+FROM python:3.11-bullseye
+
+WORKDIR /app
+COPY . .
+
+RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir grpcio-tools kafka-python
+
+EXPOSE 50051
+CMD ["python", "server.py"]

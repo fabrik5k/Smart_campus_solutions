@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package sensor;
+
+service SensorService {
+  rpc SendSensorData (SensorRequest) returns (SensorResponse);
+}
+
+message SensorRequest {
+  string sensor_id = 1;
+  string type = 2;
+  float value = 3;
+  string timestamp = 4;
+}
+
+message SensorResponse {
+  string status = 1;
+}
