@@ -22,19 +22,18 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0csensor.proto\x12\x06sensor\"R\n\rSensorRequest\x12\x11\n\tsensor_id\x18\x01 \x01(\t\x12\x0c\n\x04type\x18\x02 \x01(\t\x12\r\n\x05value\x18\x03 \x01(\x02\x12\x11\n\ttimestamp\x18\x04 \x01(\t\" \n\x0eSensorResponse\x12\x0e\n\x06status\x18\x01 \x01(\t2P\n\rSensorService\x12?\n\x0eSendSensorData\x12\x15.sensor.SensorRequest\x1a\x16.sensor.SensorResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0csensor.proto\x12\tsynthetic\x1a\x1bgoogle/protobuf/empty.proto\"C\n\rSyntheticData\x12\x11\n\ttimestamp\x18\x01 \x01(\x03\x12\x13\n\x0bmeasurement\x18\x02 \x01(\x01\x12\n\n\x02id\x18\x03 \x01(\t2P\n\x0c\x44\x61taProducer\x12@\n\nStreamData\x12\x16.google.protobuf.Empty\x1a\x18.synthetic.SyntheticData0\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'sensor_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_SENSORREQUEST']._serialized_start=24
-  _globals['_SENSORREQUEST']._serialized_end=106
-  _globals['_SENSORRESPONSE']._serialized_start=108
-  _globals['_SENSORRESPONSE']._serialized_end=140
-  _globals['_SENSORSERVICE']._serialized_start=142
-  _globals['_SENSORSERVICE']._serialized_end=222
+  _globals['_SYNTHETICDATA']._serialized_start=56
+  _globals['_SYNTHETICDATA']._serialized_end=123
+  _globals['_DATAPRODUCER']._serialized_start=125
+  _globals['_DATAPRODUCER']._serialized_end=205
 # @@protoc_insertion_point(module_scope)

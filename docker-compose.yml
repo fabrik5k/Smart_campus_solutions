@@ -1,18 +1,23 @@
 services:
   kafka:
     image: bitnami/kafka:3.5.1-debian-11-r71
-    restart: on-failure
+    restart: unless-stopped
     ports:
-      - 9092:9092
+      # porta externa (host) – use outra se 9092 já estiver em uso
+      - "9094:9094"
     environment:
+      # ==== LISTENERS ======================================================
+      # 9092 → rede Docker | 9094 → host
+      - KAFKA_CFG_LISTENERS=INTERNAL://:9092,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=INTERNAL://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=INTERNAL
+
+      # ==== DADOS BÁSICOS ==================================================
       - KAFKA_CFG_BROKER_ID=1
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      - KAFKA_CFG_NUM_PARTITIONS=3
+      - KAFKA_CFG_NUM_PARTITIONS=3          # padrão p/ *novos* tópicos
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true  # cria tópico se não existir :contentReference[oaicite:1]{index=1}
       - ALLOW_PLAINTEXT_LISTENER=yes
-    depends_on:
-      - zookeeper
 
   zookeeper:
     image: bitnami/zookeeper:latest

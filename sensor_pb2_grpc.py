@@ -3,6 +3,7 @@
 import grpc
 import warnings
 
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 import sensor_pb2 as sensor__pb2
 
 GRPC_GENERATED_VERSION = '1.71.0'
@@ -25,8 +26,9 @@ if _version_not_supported:
     )
 
 
-class SensorServiceStub(object):
-    """Missing associated documentation comment in .proto file."""
+class DataProducerStub(object):
+    """Serviço gRPC que faz streaming dos dados
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -34,43 +36,46 @@ class SensorServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.SendSensorData = channel.unary_unary(
-                '/sensor.SensorService/SendSensorData',
-                request_serializer=sensor__pb2.SensorRequest.SerializeToString,
-                response_deserializer=sensor__pb2.SensorResponse.FromString,
+        self.StreamData = channel.unary_stream(
+                '/synthetic.DataProducer/StreamData',
+                request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+                response_deserializer=sensor__pb2.SyntheticData.FromString,
                 _registered_method=True)
 
 
-class SensorServiceServicer(object):
-    """Missing associated documentation comment in .proto file."""
+class DataProducerServicer(object):
+    """Serviço gRPC que faz streaming dos dados
+    """
 
-    def SendSensorData(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+    def StreamData(self, request, context):
+        """Cliente envia Empty e recebe um stream de SyntheticData
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
 
-def add_SensorServiceServicer_to_server(servicer, server):
+def add_DataProducerServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'SendSensorData': grpc.unary_unary_rpc_method_handler(
-                    servicer.SendSensorData,
-                    request_deserializer=sensor__pb2.SensorRequest.FromString,
-                    response_serializer=sensor__pb2.SensorResponse.SerializeToString,
+            'StreamData': grpc.unary_stream_rpc_method_handler(
+                    servicer.StreamData,
+                    request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                    response_serializer=sensor__pb2.SyntheticData.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'sensor.SensorService', rpc_method_handlers)
+            'synthetic.DataProducer', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('sensor.SensorService', rpc_method_handlers)
+    server.add_registered_method_handlers('synthetic.DataProducer', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
-class SensorService(object):
-    """Missing associated documentation comment in .proto file."""
+class DataProducer(object):
+    """Serviço gRPC que faz streaming dos dados
+    """
 
     @staticmethod
-    def SendSensorData(request,
+    def StreamData(request,
             target,
             options=(),
             channel_credentials=None,
@@ -80,12 +85,12 @@ class SensorService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(
+        return grpc.experimental.unary_stream(
             request,
             target,
-            '/sensor.SensorService/SendSensorData',
-            sensor__pb2.SensorRequest.SerializeToString,
-            sensor__pb2.SensorResponse.FromString,
+            '/synthetic.DataProducer/StreamData',
+            google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            sensor__pb2.SyntheticData.FromString,
             options,
             channel_credentials,
             insecure,

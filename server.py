@@ -1,28 +1,60 @@
+import time
+import uuid
+import random
+import threading
 from concurrent import futures
-import grpc
-import sensor_pb2
-import sensor_pb2_grpc
-from kafka_producer import publish_sensor_data
-from datetime import datetime
 
-class SensorService(sensor_pb2_grpc.SensorServiceServicer):
-    def SendSensorData(self, request, context):
-        data = {
-            "sensor_id": request.sensor_id,
-            "type": request.type,
-            "value": request.value,
-            "timestamp": request.timestamp or datetime.utcnow().isoformat()
-        }
-        publish_sensor_data("sensor-data", data)
-        return sensor_pb2.SensorResponse(status="OK")
+import grpc
+from kafka import KafkaProducer
+from google.protobuf.empty_pb2 import Empty
+
+from sensor_pb2 import SyntheticData
+from sensor_pb2_grpc import DataProducerServicer, add_DataProducerServicer_to_server
+
+# CONFIGURAÇÕES
+KAFKA_BOOTSTRAP = 'kafka:9092'
+KAFKA_TOPIC = 'synthetic-data'
+GRPC_PORT = 50051
+INTERVAL_SECONDS = 1  # intervalo entre envios
+
+class DataProducerService(DataProducerServicer):
+    def __init__(self):
+        # Inicializa o producer do Kafka com serialização Protobuf
+        self.producer = KafkaProducer(
+            bootstrap_servers=KAFKA_BOOTSTRAP,
+            value_serializer=lambda msg: msg.SerializeToString()
+        )
+
+    def StreamData(self, request: Empty, context):
+        while True:
+            # Gera dados sintéticos
+            msg = SyntheticData(
+                timestamp=int(time.time() * 1000),
+                measurement=random.random() * 100,
+                id=str(uuid.uuid4())
+            )
+
+            # Publica no Kafka
+            self.producer.send(KAFKA_TOPIC, msg)
+            # opcional: block até a entrega
+            # self.producer.flush()
+
+            # Envia também pelo stream gRPC
+            yield msg
+
+            time.sleep(INTERVAL_SECONDS)
+
 
 def serve():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    sensor_pb2_grpc.add_SensorServiceServicer_to_server(SensorService(), server)
-    server.add_insecure_port("[::]:50051")
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=4))
+    add_DataProducerServicer_to_server(DataProducerService(), server)
+    server.add_insecure_port(f'[::]:{GRPC_PORT}')
     server.start()
-    print("SensorService gRPC rodando na porta 50051...")
-    server.wait_for_termination()
+    print(f"gRPC server rodando na porta {GRPC_PORT} e enviando para Kafka em '{KAFKA_TOPIC}'")
+    try:
+        server.wait_for_termination()
+    except KeyboardInterrupt:
+        print("Encerrando servidor...")
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     serve()
